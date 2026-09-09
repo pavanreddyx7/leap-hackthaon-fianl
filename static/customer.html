@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Proof - Customer Dashboard</title>
+    <link rel="stylesheet" href="/static/css/customer.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <span class="icon">⚡</span>
+            <span>POWER PROOF</span>
+        </div>
+        <div class="nav-links">
+            <a href="/" class="link">Office View</a>
+            <div class="user-profile">
+                <span class="icon">🔔</span>
+                <span class="avatar">👤</span>
+                <span id="header-home-id">H001</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <header class="welcome-header">
+            <h1>Customer Dashboard</h1>
+        </header>
+
+        <!-- Home vs Pole Comparison -->
+        <section class="comparison-section">
+            <div class="card compare-card">
+                <div class="compare-grid">
+                    <div class="compare-col home-col">
+                        <h2>🏠 MY HOME</h2>
+                        <div class="power-status">
+                            <span class="status-icon" id="home-icon">⚪</span>
+                            <span class="status-text main-status" id="home-status">AWAITING DEVICE...</span>
+                        </div>
+                        <p class="voltage"><span id="home-voltage">--</span></p>
+                        <p class="last-update">Last update: <span id="home-update">--</span></p>
+                    </div>
+
+                    <div class="compare-divider"></div>
+
+                    <div class="compare-col pole-col">
+                        <h2>⚡ CONNECTED POLE</h2>
+                        <div class="power-status">
+                            <span class="status-icon" id="pole-icon">⚪</span>
+                            <span class="status-text main-status" id="pole-status">AWAITING DEVICE...</span>
+                        </div>
+                        <p class="voltage"><span id="pole-voltage">--</span></p>
+                        <p class="last-update">Pole: <strong id="pole-id-label">--</strong></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Alert Section -->
+        <section class="alert-section" id="alert-section" style="display: none;">
+            <div class="alert-box">
+                <div class="alert-header">
+                    <h2>🚨 <span id="alert-title">LOCAL POWER ISSUE</span></h2>
+                </div>
+                <div class="alert-body">
+                    <div class="outage-status-row">
+                        <span>Pole <strong id="alert-pole">P003</strong> <span id="alert-pole-icon">🟢 ON</span></span>
+                        <span>Home <strong id="alert-home">H001</strong> <span id="alert-home-icon">🔴 OFF</span></span>
+                    </div>
+
+                    <p class="alert-desc">Power interruption detected at <strong id="outage-start-time">13:35</strong></p>
+                    
+                    <div class="alert-actions" style="text-align: center; margin-top: 1rem;">
+                        <button class="btn btn-outline" id="ticket-action-btn">🎫 CREATE TICKET</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Section -->
+        <section class="analytics-section">
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 MY POWER AVAILABILITY</h2>
+                </div>
+                <div class="card-body">
+                    <table class="simple-table">
+                        <tbody>
+                            <tr>
+                                <td>Today</td>
+                                <td><span class="text-success" id="today-on">--</span></td>
+                                <td><strong id="today-pct">--</strong></td>
+                            </tr>
+                            <tr>
+                                <td>7 Days</td>
+                                <td><span class="text-success" id="week-on">--</span></td>
+                                <td><strong id="week-pct">--</strong></td>
+                            </tr>
+                            <tr>
+                                <td>30 Days</td>
+                                <td><span class="text-success" id="month-on">--</span></td>
+                                <td><strong id="month-pct">--</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="card-actions">
+                        <button class="btn btn-outline-sm">VIEW POWER HISTORY</button>
+                        <button class="btn btn-outline-sm">DOWNLOAD POWER REPORT</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tickets & History Layout -->
+        <section class="tickets-history-layout">
+            <!-- Tickets -->
+            <div class="card tickets-card">
+                <div class="card-header">
+                    <h2>🎫 MY TICKETS</h2>
+                </div>
+                <div class="card-body" id="tickets-container">
+                    <!-- Dynamic Tickets -->
+                </div>
+                <div class="card-footer report-issue-form">
+                    <input type="text" id="issue-description" class="issue-input" placeholder="Describe the issue...">
+                    <button class="btn btn-outline-sm" id="report-issue-btn">🎫 CREATE TICKET</button>
+                </div>
+            </div>
+
+            <!-- Outage History -->
+            <div class="card history-card">
+                <div class="card-header">
+                    <h2>📈 OUTAGE HISTORY</h2>
+                </div>
+                <div class="card-body">
+                    <table class="simple-table" id="outage-history-table">
+                        <!-- Dynamic History -->
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Community Status -->
+        <section class="community-section">
+            <div class="card">
+                <div class="card-header">
+                    <h2>🌐 COMMUNITY POWER STATUS</h2>
+                </div>
+                <div class="card-body">
+                    <p class="community-stat">My availability: <strong id="comm-my-avail">--</strong></p>
+                    <p class="community-stat">Area average: <strong id="comm-area-avail">--</strong></p>
+                    
+                    <div class="card-actions" style="margin-top: 1.5rem;">
+                        <button class="btn btn-outline-sm">VIEW COMMUNITY STATUS</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="/static/js/customer.js"></script>
+</body>
+</html>

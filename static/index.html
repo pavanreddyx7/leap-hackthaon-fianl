@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Station Control Center</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <span class="icon">⚡</span>
+            <span>POWER STATION CONTROL CENTER</span>
+        </div>
+        <div class="nav-links">
+            <a href="/customer" class="link">View Customer Portal</a>
+            <div class="user-profile">
+                <span class="icon">🔔 <span class="badge" id="nav-alert-badge" style="display:none;">0</span></span>
+                <span class="avatar">👤</span>
+                <span>ADMIN</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        
+        <!-- Stats Row -->
+        <section class="stats-row">
+            <div class="stat-card">
+                <h3>TOTAL POLES</h3>
+                <p id="stat-total-poles">--</p>
+            </div>
+            <div class="stat-card">
+                <h3>🟢 CURRENT</h3>
+                <p id="stat-current-poles" class="text-success">--</p>
+            </div>
+            <div class="stat-card">
+                <h3>🔴 NO CURRENT</h3>
+                <p id="stat-no-current" class="text-danger">--</p>
+            </div>
+            <div class="stat-card">
+                <h3>📡 NOT REPORTING</h3>
+                <p id="stat-not-reporting" class="text-warning">--</p>
+            </div>
+            <div class="stat-card">
+                <h3>🏠 HOMES</h3>
+                <p id="stat-total-homes">--</p>
+            </div>
+            <div class="stat-card">
+                <h3>🎫 OPEN TICKETS</h3>
+                <p id="stat-open-tickets" class="text-warning">--</p>
+            </div>
+        </section>
+
+        <!-- Search -->
+        <section class="search-section">
+            <div class="search-bar">
+                <span class="search-icon">🔎</span>
+                <input type="text" id="pole-search" placeholder="Search Pole ID (P001) or Home ID (H001)...">
+                <button class="btn btn-primary" onclick="searchPole()">SEARCH</button>
+            </div>
+            <p id="search-result" class="search-result"></p>
+        </section>
+
+        <!-- Map & Alerts -->
+        <section class="map-alerts-layout">
+            <div class="card map-card">
+                <div class="card-header">
+                    <h2>🗺️ LIVE POLE MAP</h2>
+                </div>
+                <div class="card-body map-body" id="pole-map-container">
+                    <!-- Dynamic Pole Tree -->
+                </div>
+            </div>
+
+            <div class="card alerts-card">
+                <div class="card-header">
+                    <h2>🚨 CRITICAL ALERTS</h2>
+                </div>
+                <div class="card-body" id="critical-alerts-container">
+                    <!-- Dynamic Alerts -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Selected Pole View -->
+        <section class="selected-pole-section">
+            <div class="card detail-card" id="selected-pole-card">
+                <div class="detail-header">
+                    <h2>⚡ SELECTED POLE — <span id="sel-pole-id">NONE</span></h2>
+                    <span class="status-badge" id="sel-pole-status">SELECT A POLE</span>
+                </div>
+                <div class="detail-body">
+                    <div class="detail-row">
+                        <p><strong>Current:</strong> <span id="sel-pole-voltage">--</span></p>
+                        <p><strong>Feeder:</strong> <span id="sel-pole-feeder">--</span></p>
+                        <p><strong>Location:</strong> <span id="sel-pole-loc">--</span></p>
+                    </div>
+                    <div class="detail-row">
+                        <p><strong>Last Update:</strong> <span id="sel-pole-time">--</span></p>
+                        <p id="sel-pole-connectivity" class="text-muted"></p>
+                    </div>
+                    <div class="detail-actions">
+                        <button class="btn btn-outline">VIEW LOCATION</button>
+                        <button class="btn btn-outline">VIEW HOMES</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Connected Homes -->
+        <section class="connected-homes-section">
+            <div class="card">
+                <div class="card-header homes-header">
+                    <h2>🏠 CONNECTED HOMES — <span id="sel-pole-homes-count">0</span></h2>
+                    <button class="btn btn-outline" onclick="addHome()">+ ADD HOME</button>
+                </div>
+                <div class="card-body">
+                    <div class="homes-grid" id="homes-grid-container">
+                        <!-- Dynamic Homes -->
+                        <p class="text-muted">Select a pole to view connected homes.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tickets -->
+        <section class="tickets-section">
+            <div class="card">
+                <div class="card-header">
+                    <h2>🎫 REQUESTING / MAINTENANCE TICKETS</h2>
+                </div>
+                <div class="card-body">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>TICKET</th>
+                                <th>POLE</th>
+                                <th>HOMES</th>
+                                <th>ISSUE</th>
+                                <th>PRIORITY</th>
+                                <th>STATUS</th>
+                                <th>ACTION</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tickets-table-body">
+                            <!-- Dynamic Tickets -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
