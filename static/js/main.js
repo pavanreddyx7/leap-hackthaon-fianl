@@ -22,7 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
         selPoleTime: document.getElementById('sel-pole-time'),
         selPoleHomesCount: document.getElementById('sel-pole-homes-count'),
         selPoleConnectivity: document.getElementById('sel-pole-connectivity'),
-        
+        selPoleMapContainer: document.getElementById('sel-pole-map-container'),
+        selPoleMap: document.getElementById('sel-pole-map'),
+
         homesGrid: document.getElementById('homes-grid-container'),
         ticketsTable: document.getElementById('tickets-table-body'),
         
@@ -215,9 +217,42 @@ document.addEventListener('DOMContentLoaded', () => {
             let hHtml = '';
             connectedHomes.forEach(h => {
                 const hIcon = h.status === 'ON' ? '🟢 ON' : '🔴 OFF';
-                hHtml += `<div class="home-item">${h.id} ${hIcon} <button class="btn btn-outline" onclick="window.createTicket('${h.id}')" title="Create ticket for ${h.id}">🎫</button></div>`;
+                hHtml += `<div class="home-item">${h.id} ${hIcon}</div>`;
             });
             elements.homesGrid.innerHTML = hHtml;
+        }
+
+        // Keep the map in sync with whichever pole is selected, so switching
+        // poles while the map is open navigates it automatically.
+        if (elements.selPoleMapContainer && elements.selPoleMapContainer.style.display !== 'none') {
+            updatePoleMap(pole);
+        }
+    };
+
+    function updatePoleMap(pole) {
+        const loc = (pole.location || '').trim();
+        // "lat, lng" locations point the pin at exact coordinates instead of
+        // a fuzzy text search - keep the pole ID off the query in that case
+        // so it doesn't get misread as a third coordinate.
+        const isCoordinates = /^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/.test(loc);
+        const query = isCoordinates ? loc : (loc ? `${loc} (${pole.id})` : `Power pole ${pole.id}`);
+        elements.selPoleMap.src = `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
+    }
+
+    window.viewLocation = function() {
+        if (!globalData || !selectedPoleId) {
+            alert('Select a pole first.');
+            return;
+        }
+        const pole = globalData.poles.find(p => p.id === selectedPoleId);
+        if (!pole) return;
+
+        const isHidden = elements.selPoleMapContainer.style.display === 'none';
+        if (isHidden) {
+            updatePoleMap(pole);
+            elements.selPoleMapContainer.style.display = 'block';
+        } else {
+            elements.selPoleMapContainer.style.display = 'none';
         }
     };
 
@@ -279,27 +314,6 @@ document.addEventListener('DOMContentLoaded', () => {
         })
             .then(res => {
                 if (!res.ok) return res.json().then(e => { throw new Error(e.detail || 'Failed to add home'); });
-                return res.json();
-            })
-            .then(() => fetchData())
-            .catch(err => alert(err.message));
-    };
-
-    window.createTicket = function(deviceId) {
-        const targetId = deviceId || selectedPoleId;
-        if (!targetId) {
-            alert('Select a pole first.');
-            return;
-        }
-        const issue = prompt('Describe the issue (optional):', 'No Current') || 'No Current';
-
-        fetch('/api/tickets', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ device_id: targetId, issue })
-        })
-            .then(res => {
-                if (!res.ok) return res.json().then(e => { throw new Error(e.detail || 'Failed to create ticket'); });
                 return res.json();
             })
             .then(() => fetchData())

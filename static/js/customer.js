@@ -40,7 +40,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ticketActionBtn: document.getElementById('ticket-action-btn'),
         reportIssueBtn: document.getElementById('report-issue-btn'),
         issueDescription: document.getElementById('issue-description'),
+
+        viewHistoryBtn: document.getElementById('view-history-btn'),
+        downloadReportBtn: document.getElementById('download-report-btn'),
+        historyCard: document.querySelector('.history-card'),
     };
+
+    let latestData = null;
 
     function formatTimeSince(isoString) {
         if (!isoString) return 'just now';
@@ -225,10 +231,99 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (elements.viewHistoryBtn) {
+        elements.viewHistoryBtn.addEventListener('click', () => {
+            if (elements.historyCard) {
+                elements.historyCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+
+    function buildPowerReport(data) {
+        const lines = [];
+        lines.push('POWER PROOF - Power Report');
+        lines.push(`Home: ${HOME_ID}`);
+        lines.push(`Generated: ${new Date().toLocaleString()}`);
+        lines.push('');
+
+        lines.push('CURRENT STATUS');
+        lines.push('--------------');
+        if (data.home) {
+            const v = data.home.voltage != null ? data.home.voltage.toFixed(2) : '--';
+            const a = data.home.current_amps != null ? data.home.current_amps.toFixed(3) : '--';
+            lines.push(`Home: ${data.home.status} (${v} V, ${a} A)`);
+        }
+        if (data.pole) {
+            const v = data.pole.voltage != null ? data.pole.voltage.toFixed(2) : '--';
+            const a = data.pole.current_amps != null ? data.pole.current_amps.toFixed(3) : '--';
+            lines.push(`Pole (${data.pole.device_id}): ${data.pole.status} (${v} V, ${a} A)`);
+        }
+        lines.push('');
+
+        lines.push('POWER AVAILABILITY');
+        lines.push('-------------------');
+        if (data.analytics) {
+            lines.push(`Today: ${data.analytics.today.on} ON (${data.analytics.today.pct})`);
+            lines.push(`7 Days: ${data.analytics.week.on} ON (${data.analytics.week.pct})`);
+            lines.push(`30 Days: ${data.analytics.month.on} ON (${data.analytics.month.pct})`);
+        }
+        lines.push('');
+
+        lines.push('COMMUNITY COMPARISON');
+        lines.push('---------------------');
+        if (data.community) {
+            lines.push(`My availability: ${data.community.my_availability}`);
+            lines.push(`Area average: ${data.community.area_average}`);
+        }
+        lines.push('');
+
+        lines.push('OUTAGE HISTORY');
+        lines.push('---------------');
+        if (data.outage_history && data.outage_history.length) {
+            data.outage_history.forEach(h => {
+                lines.push(`${h.date}  ${h.time}  ${h.duration}  ${h.type}`);
+            });
+        } else {
+            lines.push('No outages recorded.');
+        }
+        lines.push('');
+
+        lines.push('TICKETS');
+        lines.push('-------');
+        if (data.tickets && data.tickets.length) {
+            data.tickets.forEach(t => lines.push(`${t.id} - ${t.issue} - ${t.status}`));
+        } else {
+            lines.push('No tickets.');
+        }
+
+        return lines.join('\n');
+    }
+
+    if (elements.downloadReportBtn) {
+        elements.downloadReportBtn.addEventListener('click', () => {
+            if (!latestData) {
+                alert('No data available yet.');
+                return;
+            }
+            const report = buildPowerReport(latestData);
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `power_report_${HOME_ID}_${new Date().toISOString().slice(0, 10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    }
+
     function fetchData() {
         fetch(`/api/customer_data/${HOME_ID}`)
             .then(res => res.json())
             .then(data => {
+                latestData = data;
+
                 if (data.home) {
                     elements.headerHome.textContent = data.home.device_id;
                 }

@@ -9,7 +9,7 @@ def seed_database():
 
     print("Seeding devices — only the real hardware you actually have...")
     devices = [
-        Device(id="P001", type="pole", location="Main Road, Area 1"),
+        Device(id="P001", type="pole", location="13.324254, 77.095494"),
         Device(id="H001", type="home", location="House 1, Area 1", parent_pole_id="P001"),
     ]
     db.add_all(devices)
