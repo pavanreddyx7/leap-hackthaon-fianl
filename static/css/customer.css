@@ -28,7 +28,6 @@ body {
 .text-warning { color: var(--warning); }
 .text-muted { color: var(--text-muted); }
 
-/* Navbar */
 .top-nav {
     display: flex;
     justify-content: space-between;
@@ -68,7 +67,6 @@ body {
     font-weight: 500;
 }
 
-/* Dashboard Container */
 .dashboard-container {
     max-width: 800px;
     margin: 0 auto;
@@ -85,7 +83,6 @@ body {
     color: var(--text-muted);
 }
 
-/* Card General */
 .card {
     background-color: var(--card-bg);
     border: 1px solid var(--border);
@@ -116,7 +113,6 @@ body {
     background-color: rgba(0,0,0,0.1);
 }
 
-/* Buttons */
 .btn {
     padding: 0.8rem 1.5rem;
     border-radius: 6px;
@@ -157,7 +153,6 @@ body {
     margin-top: 1rem;
 }
 
-/* Comparison Card */
 .compare-grid {
     display: flex;
     align-items: center;
@@ -198,12 +193,17 @@ body {
     margin-bottom: 0.5rem;
 }
 
+.current {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
 .last-update {
     color: var(--text-muted);
     font-size: 0.85rem;
 }
 
-/* Alert Section */
 .alert-box {
     background-color: rgba(239, 68, 68, 0.1);
     border: 1px solid var(--danger);
@@ -240,7 +240,6 @@ body {
     color: var(--text-muted);
 }
 
-/* Simple Table */
 .simple-table {
     width: 100%;
     border-collapse: collapse;
@@ -256,7 +255,6 @@ body {
     border-bottom: none;
 }
 
-/* Tickets & History Layout */
 .tickets-history-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -294,7 +292,6 @@ body {
     border-color: var(--accent);
 }
 
-/* Community Stats */
 .community-stat {
     font-size: 1.1rem;
     margin-bottom: 0.5rem;

@@ -13,7 +13,6 @@ import datetime
 import uvicorn
 from contextlib import asynccontextmanager
 
-# Connection manager for WebSockets
 class ConnectionManager:
     def __init__(self):
         self.active_connections: list[WebSocket] = []
@@ -31,8 +30,6 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-# If a pole hasn't sent a reading within this window, treat it as offline/not reporting
-# rather than trusting its last known ON/OFF status.
 STALE_THRESHOLD_SECONDS = 120
 
 @asynccontextmanager
@@ -52,7 +49,6 @@ app.add_middleware(
 
 from fastapi.responses import FileResponse
 
-# Serve static files for frontend dashboards
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
@@ -61,38 +57,32 @@ async def serve_index():
 
 @app.post("/api/telemetry")
 async def receive_telemetry(request: Request, db: Session = Depends(get_db)):
-    """HTTPS Endpoint for device data ingestion."""
     device_id = request.headers.get('X-Device-ID')
     token = request.headers.get('X-Device-Token')
-    
+
     if not device_id or not token:
         raise HTTPException(status_code=401, detail="Missing authentication headers")
-        
+
     if not authenticate_device(device_id, token):
         raise HTTPException(status_code=401, detail="Unauthorized device")
-        
+
     payload = await request.json()
     is_valid, reason = validate_telemetry(payload)
     if not is_valid:
         raise HTTPException(status_code=400, detail=f"Validation failed: {reason}")
-        
-    # Process Data
+
     process_telemetry(payload)
-    
-    # Notify connected frontend clients
+
     await manager.broadcast(json.dumps({"event": "new_data", "data": payload}))
-    
+
     return {"message": "Telemetry received and processed successfully"}
 
 @app.get("/api/dashboard_data")
 def get_dashboard_data(db: Session = Depends(get_db)):
-    """Data payload for the Power Station Control Center."""
-    # Stats
     total_poles = db.query(Device).filter(Device.type == "pole").count()
     total_homes = db.query(Device).filter(Device.type == "home").count()
     open_tickets = db.query(Ticket).filter(Ticket.status.in_(["OPEN", "NEW", "IN_PROGRESS"])).count()
-    
-    # Get latest reading for each pole
+
     poles = db.query(Device).filter(Device.type == "pole").all()
     pole_status_map = {}
     current_poles = 0
@@ -111,8 +101,6 @@ def get_dashboard_data(db: Session = Depends(get_db)):
         seconds_since_update = (now - reading.timestamp).total_seconds() if reading else None
         is_reporting = reading is not None and seconds_since_update <= STALE_THRESHOLD_SECONDS
 
-        # Trust the last known ON/OFF status only while the pole is actively reporting.
-        # A pole that's gone quiet is a communication failure, not a confirmed power state.
         status = reading.status if (reading and is_reporting) else "NO DATA"
 
         if status == "ON":
@@ -124,7 +112,6 @@ def get_dashboard_data(db: Session = Depends(get_db)):
 
         pole_status_map[p.id] = status
 
-        # Count homes
         affected_homes = db.query(Device).filter(Device.parent_pole_id == p.id, Device.type == "home").count()
 
         p_dict = {
@@ -145,7 +132,6 @@ def get_dashboard_data(db: Session = Depends(get_db)):
         elif status == "OFF" and affected_homes > 0:
             alerts.append({"pole_id": p.id, "homes_affected": affected_homes, "status": "NO CURRENT"})
 
-    # Homes map for the selected pole view
     homes = db.query(Device).filter(Device.type == "home").all()
     home_data = []
     for h in homes:
@@ -156,7 +142,6 @@ def get_dashboard_data(db: Session = Depends(get_db)):
             "status": reading.status if reading else "UNKNOWN"
         })
 
-    # Tickets
     active_tickets = db.query(Ticket).filter(Ticket.status.in_(["OPEN", "NEW", "IN_PROGRESS"])).all()
     ticket_data = []
     for t in active_tickets:
@@ -172,7 +157,7 @@ def get_dashboard_data(db: Session = Depends(get_db)):
             "priority": priority,
             "status": t.status
         })
-        
+
     return {
         "stats": {
             "total_poles": total_poles,
@@ -190,13 +175,11 @@ def get_dashboard_data(db: Session = Depends(get_db)):
 
 @app.post("/api/tickets")
 async def create_ticket_endpoint(request: Request, db: Session = Depends(get_db)):
-    """Create a maintenance ticket for a pole (from office dashboard or customer portal)."""
     payload = await request.json()
     device_id = payload.get("device_id")
     if not device_id:
         raise HTTPException(status_code=400, detail="device_id is required")
 
-    # Resolve a home device to its parent pole so tickets stay keyed by pole
     device = db.query(Device).filter(Device.id == device_id).first()
     pole_id = device.parent_pole_id if (device and device.type == "home" and device.parent_pole_id) else device_id
 
@@ -209,7 +192,6 @@ async def create_ticket_endpoint(request: Request, db: Session = Depends(get_db)
 
 @app.post("/api/tickets/{ticket_id}/resolve")
 async def resolve_ticket_endpoint(ticket_id: int, db: Session = Depends(get_db)):
-    """Mark a ticket as resolved (the 'ISSUE SOLVED' action)."""
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
@@ -224,7 +206,6 @@ async def resolve_ticket_endpoint(ticket_id: int, db: Session = Depends(get_db))
 
 @app.post("/api/homes")
 async def create_home_endpoint(request: Request, db: Session = Depends(get_db)):
-    """Connect a new home to a pole (the 'ADD HOME' action on the office dashboard)."""
     payload = await request.json()
     home_id = payload.get("home_id")
     pole_id = payload.get("pole_id")
@@ -256,33 +237,27 @@ async def serve_customer():
 
 @app.get("/api/customer_data/{home_id}")
 def get_customer_data(home_id: str, db: Session = Depends(get_db)):
-    """Data specifically for the Customer Dashboard."""
-    # Find home
     home_reading = db.query(Reading).filter(Reading.device_id == home_id).order_by(Reading.timestamp.desc()).first()
-    
-    # Try to find associated pole. We'll default to P001 if not explicitly linked in DB.
+
     home_device = db.query(Device).filter(Device.id == home_id).first()
     pole_id = "P001"
     if home_device and home_device.parent_pole_id:
         pole_id = home_device.parent_pole_id
-        
+
     pole_reading = db.query(Reading).filter(Reading.device_id == pole_id).order_by(Reading.timestamp.desc()).first()
-    
-    # Get active tickets
+
     tickets = db.query(Ticket).filter(Ticket.device_id == home_id).order_by(Ticket.created_at.desc()).all()
-    
-    # If no tickets specifically for home, fetch for pole
+
     if not tickets:
         tickets = db.query(Ticket).filter(Ticket.device_id == pole_id).order_by(Ticket.created_at.desc()).all()
-    
-    # Real historical analytics derived from the Reading table
+
     analytics = get_uptime_stats(db, home_id)
     outage_history = get_outage_history(db, home_id, pole_id)
     community = get_community_stats(db, home_id)
 
     return {
-        "home": {"device_id": home_id, "status": home_reading.status, "voltage": home_reading.voltage, "timestamp": home_reading.timestamp.isoformat()} if home_reading else None,
-        "pole": {"device_id": pole_id, "status": pole_reading.status, "voltage": pole_reading.voltage, "timestamp": pole_reading.timestamp.isoformat()} if pole_reading else None,
+        "home": {"device_id": home_id, "status": home_reading.status, "voltage": home_reading.voltage, "current_amps": home_reading.current_amps, "timestamp": home_reading.timestamp.isoformat()} if home_reading else None,
+        "pole": {"device_id": pole_id, "status": pole_reading.status, "voltage": pole_reading.voltage, "current_amps": pole_reading.current_amps, "timestamp": pole_reading.timestamp.isoformat()} if pole_reading else None,
         "tickets": [{"id": f"TK{1000+t.id}", "issue": t.issue or "No Current", "status": t.status} for t in tickets],
         "analytics": analytics,
         "outage_history": outage_history,

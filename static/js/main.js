@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let globalData = null;
     let selectedPoleId = null;
 
-    // UI Elements
     const elements = {
         statPoles: document.getElementById('stat-total-poles'),
         statCurrent: document.getElementById('stat-current-poles'),
@@ -93,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function statusIcon(status) {
         if (status === 'ON') return '🟢';
         if (status === 'OFF') return '🔴';
-        return '📡'; // NO DATA — pole isn't sending telemetry
+        return '📡';
     }
 
     function renderNode(pole, prefix, indent, alertPoleIds) {
@@ -101,10 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const isSelected = pole.id === selectedPoleId;
         const nodeClass = isSelected ? 'pole-node selected' : 'pole-node';
 
-        // Always-visible: how many homes this pole feeds
         const homesBadge = `<span class="pole-node-homes" title="Connected homes">🏠 ${pole.homes_count}</span>`;
 
-        // Always-visible: live no-current / not-reporting indicator
         let statusBadge = '';
         if (pole.status === 'OFF') {
             statusBadge = ' <span class="pole-node-status danger">⚠ NO CURRENT</span>';
@@ -112,7 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
             statusBadge = ' <span class="pole-node-status warning">⚠ NO SIGNAL</span>';
         }
 
-        // Always-visible: flag if this pole currently has an active critical alert
         const alertBadge = alertPoleIds.has(pole.id) ? ' <span class="pole-node-alert">🚨 ALERT</span>' : '';
 
         let detail = '';
@@ -131,7 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return `<div>${indent}${prefix}<span class="${cls}" onclick="window.selectPole('${home.parent_pole_id}')" title="${isOn ? 'ON' : 'OFF'}">🏠 ${icon} ${home.id}</span></div>`;
     }
 
-    // Recursively builds the tree: each pole's child poles AND its directly connected homes as leaves
     function buildTreeHTML(poles, homes, parentPoleId, depth, alertPoleIds) {
         const childPoles = poles.filter(p => p.parent_id === parentPoleId);
         const childHomes = homes.filter(h => h.parent_pole_id === parentPoleId);
@@ -175,10 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const pole = globalData.poles.find(p => p.id === poleId);
         if (!pole) return;
 
-        // Re-render the map so the selected node is highlighted with its live detail inline
         renderMap(globalData.poles, globalData.homes, globalData.alerts);
 
-        // Update Pole Details
         elements.selPoleId.textContent = pole.id;
 
         let statusText, statusClass;
@@ -214,7 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         elements.selPoleHomesCount.textContent = pole.homes_count;
 
-        // Update Connected Homes Grid
         const connectedHomes = globalData.homes.filter(h => h.parent_pole_id === pole.id);
         if (connectedHomes.length === 0) {
             elements.homesGrid.innerHTML = '<p class="text-muted">No homes connected directly to this pole.</p>';
@@ -301,8 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderAlerts(data.alerts);
                 renderTickets(data.tickets);
                 renderMap(data.poles, data.homes, data.alerts);
-                
-                // Keep selected pole active or default to the first alert pole
+
                 if (selectedPoleId) {
                     window.selectPole(selectedPoleId);
                 } else if (data.alerts.length > 0) {
@@ -314,10 +305,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => console.error(err));
     }
 
-    // Initial load
     fetchData();
 
-    // WebSockets
     const ws = new WebSocket(`ws://${window.location.host}/ws/dashboard`);
     ws.onmessage = (event) => {
         const msg = JSON.parse(event.data);
@@ -326,7 +315,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Polling fallback
     setInterval(() => {
         if (ws.readyState !== WebSocket.OPEN) {
             fetchData();

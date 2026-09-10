@@ -28,7 +28,6 @@
             <h1>Customer Dashboard</h1>
         </header>
 
-        <!-- Home vs Pole Comparison -->
         <section class="comparison-section">
             <div class="card compare-card">
                 <div class="compare-grid">
@@ -39,6 +38,7 @@
                             <span class="status-text main-status" id="home-status">AWAITING DEVICE...</span>
                         </div>
                         <p class="voltage"><span id="home-voltage">--</span></p>
+                        <p class="current"><span id="home-current">--</span></p>
                         <p class="last-update">Last update: <span id="home-update">--</span></p>
                     </div>
 
@@ -51,13 +51,13 @@
                             <span class="status-text main-status" id="pole-status">AWAITING DEVICE...</span>
                         </div>
                         <p class="voltage"><span id="pole-voltage">--</span></p>
+                        <p class="current"><span id="pole-current">--</span></p>
                         <p class="last-update">Pole: <strong id="pole-id-label">--</strong></p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Dynamic Alert Section -->
         <section class="alert-section" id="alert-section" style="display: none;">
             <div class="alert-box">
                 <div class="alert-header">
@@ -78,7 +78,6 @@
             </div>
         </section>
 
-        <!-- Analytics Section -->
         <section class="analytics-section">
             <div class="card">
                 <div class="card-header">
@@ -112,15 +111,12 @@
             </div>
         </section>
 
-        <!-- Tickets & History Layout -->
         <section class="tickets-history-layout">
-            <!-- Tickets -->
             <div class="card tickets-card">
                 <div class="card-header">
                     <h2>🎫 MY TICKETS</h2>
                 </div>
                 <div class="card-body" id="tickets-container">
-                    <!-- Dynamic Tickets -->
                 </div>
                 <div class="card-footer report-issue-form">
                     <input type="text" id="issue-description" class="issue-input" placeholder="Describe the issue...">
@@ -128,20 +124,17 @@
                 </div>
             </div>
 
-            <!-- Outage History -->
             <div class="card history-card">
                 <div class="card-header">
                     <h2>📈 OUTAGE HISTORY</h2>
                 </div>
                 <div class="card-body">
                     <table class="simple-table" id="outage-history-table">
-                        <!-- Dynamic History -->
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- Community Status -->
         <section class="community-section">
             <div class="card">
                 <div class="card-header">

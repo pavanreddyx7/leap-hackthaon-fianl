@@ -10,7 +10,6 @@ def format_duration(seconds):
 
 
 def compute_uptime(db, device_id, since, until=None):
-    """Walks the Reading history for a device and sums real ON/OFF time within [since, until]."""
     until = until or datetime.datetime.utcnow()
     readings = db.query(Reading).filter(
         Reading.device_id == device_id,
@@ -40,7 +39,6 @@ def compute_uptime(db, device_id, since, until=None):
 
 
 def get_uptime_stats(db, device_id):
-    """Real today/week/month ON-time stats derived from the Reading table."""
     now = datetime.datetime.utcnow()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     windows = {
@@ -60,7 +58,6 @@ def get_uptime_stats(db, device_id):
 
 
 def get_outage_history(db, home_id, pole_id, limit=10):
-    """Derives past outage events for a home from real ON->OFF->ON transitions in Reading history."""
     readings = db.query(Reading).filter(Reading.device_id == home_id).order_by(Reading.timestamp.asc()).all()
 
     events = []
@@ -91,7 +88,6 @@ def get_outage_history(db, home_id, pole_id, limit=10):
 
 
 def get_community_stats(db, home_id):
-    """Compares one home's real 30-day uptime against the average of all homes."""
     now = datetime.datetime.utcnow()
     since = now - datetime.timedelta(days=30)
 

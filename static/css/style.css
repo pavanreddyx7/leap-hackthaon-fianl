@@ -23,7 +23,6 @@ body {
     line-height: 1.6;
 }
 
-/* Navbar */
 .top-nav {
     display: flex;
     justify-content: space-between;
@@ -73,14 +72,12 @@ body {
     margin-left: -5px;
 }
 
-/* Container */
 .dashboard-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
 }
 
-/* Stats Row */
 .stats-row {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -113,7 +110,6 @@ body {
 .text-warning { color: var(--warning); }
 .text-muted { color: var(--text-muted); }
 
-/* Search */
 .search-section {
     margin-bottom: 2rem;
 }
@@ -155,7 +151,6 @@ body {
 .btn-primary { background-color: var(--accent); color: white; }
 .btn-outline { background-color: transparent; border: 1px solid var(--border); color: var(--text-main); }
 
-/* Cards */
 .card {
     background-color: var(--card-bg);
     border: 1px solid var(--border);
@@ -186,7 +181,6 @@ body {
     padding: 1.5rem;
 }
 
-/* Map & Alerts */
 .map-alerts-layout {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -331,7 +325,6 @@ body {
     margin-bottom: 0.2rem;
 }
 
-/* Detail Card */
 .detail-card {
     border-left: 4px solid var(--accent);
 }
@@ -374,7 +367,6 @@ body {
     margin-top: 2rem;
 }
 
-/* Homes Grid */
 .homes-grid {
     display: flex;
     flex-wrap: wrap;
@@ -389,7 +381,6 @@ body {
     border: 1px solid var(--border);
 }
 
-/* Table */
 .data-table {
     width: 100%;
     border-collapse: collapse;

@@ -2,9 +2,6 @@ from database import Ticket
 from .notification import send_sms_alert
 
 def create_ticket(db, device_id, issue="No Current"):
-    """
-    Creates a ticket if one doesn't already exist and is open.
-    """
     existing_ticket = db.query(Ticket).filter(
         Ticket.device_id == device_id,
         Ticket.status.in_(["OPEN", "NEW", "IN_PROGRESS"])

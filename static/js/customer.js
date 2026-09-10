@@ -1,17 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // The specific home we are viewing
     const HOME_ID = 'H001';
-    
-    // UI Elements
+
     const elements = {
         homeIcon: document.getElementById('home-icon'),
         homeStatus: document.getElementById('home-status'),
         homeVoltage: document.getElementById('home-voltage'),
+        homeCurrent: document.getElementById('home-current'),
         homeUpdate: document.getElementById('home-update'),
 
         poleIcon: document.getElementById('pole-icon'),
         poleStatus: document.getElementById('pole-status'),
         poleVoltage: document.getElementById('pole-voltage'),
+        poleCurrent: document.getElementById('pole-current'),
         poleIdLabel: document.getElementById('pole-id-label'),
 
         alertSection: document.getElementById('alert-section'),
@@ -57,14 +57,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const icon = isPole ? elements.poleIcon : elements.homeIcon;
         const status = isPole ? elements.poleStatus : elements.homeStatus;
         const voltage = isPole ? elements.poleVoltage : elements.homeVoltage;
+        const current = isPole ? elements.poleCurrent : elements.homeCurrent;
 
         if (!data) {
-            // No real reading exists yet for this device — say so plainly
-            // instead of leaving stale/placeholder text on screen.
             icon.textContent = '⚪';
             status.textContent = 'AWAITING DEVICE...';
             status.style.color = 'var(--text-muted)';
             voltage.textContent = '--';
+            current.textContent = '--';
             if (isPole) {
                 elements.poleIdLabel.textContent = '--';
             } else {
@@ -88,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         voltage.textContent = data.voltage != null ? `${data.voltage.toFixed(2)} V` : '0.00 V';
+        current.textContent = data.current_amps != null ? `${data.current_amps.toFixed(3)} A` : '0.000 A';
     }
 
     function updateAlert(home, pole) {
@@ -226,10 +227,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => console.error(err));
     }
 
-    // Initial fetch
     fetchData();
 
-    // Use WebSockets for live updates
     const ws = new WebSocket(`ws://${window.location.host}/ws/customer/${HOME_ID}`);
     ws.onmessage = (event) => {
         const msg = JSON.parse(event.data);
@@ -237,8 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchData();
         }
     };
-    
-    // Fallback polling just in case WS drops
+
     setInterval(() => {
         if (ws.readyState !== WebSocket.OPEN) {
             fetchData();
