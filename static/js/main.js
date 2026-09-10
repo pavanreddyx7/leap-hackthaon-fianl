@@ -74,10 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let html = '';
         tickets.forEach(t => {
+            const targetLabel = t.device_id && t.device_id !== t.pole_id ? `${t.pole_id} → ${t.device_id}` : t.pole_id;
             html += `
                 <tr>
                     <td><strong>${t.id}</strong></td>
-                    <td>${t.pole_id}</td>
+                    <td>${targetLabel}</td>
                     <td>${t.homes_affected} Homes</td>
                     <td>${t.issue}</td>
                     <td>${t.priority}</td>
@@ -214,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let hHtml = '';
             connectedHomes.forEach(h => {
                 const hIcon = h.status === 'ON' ? '🟢 ON' : '🔴 OFF';
-                hHtml += `<div class="home-item">${h.id} ${hIcon}</div>`;
+                hHtml += `<div class="home-item">${h.id} ${hIcon} <button class="btn btn-outline" onclick="window.createTicket('${h.id}')" title="Create ticket for ${h.id}">🎫</button></div>`;
             });
             elements.homesGrid.innerHTML = hHtml;
         }
@@ -278,6 +279,27 @@ document.addEventListener('DOMContentLoaded', () => {
         })
             .then(res => {
                 if (!res.ok) return res.json().then(e => { throw new Error(e.detail || 'Failed to add home'); });
+                return res.json();
+            })
+            .then(() => fetchData())
+            .catch(err => alert(err.message));
+    };
+
+    window.createTicket = function(deviceId) {
+        const targetId = deviceId || selectedPoleId;
+        if (!targetId) {
+            alert('Select a pole first.');
+            return;
+        }
+        const issue = prompt('Describe the issue (optional):', 'No Current') || 'No Current';
+
+        fetch('/api/tickets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ device_id: targetId, issue })
+        })
+            .then(res => {
+                if (!res.ok) return res.json().then(e => { throw new Error(e.detail || 'Failed to create ticket'); });
                 return res.json();
             })
             .then(() => fetchData())

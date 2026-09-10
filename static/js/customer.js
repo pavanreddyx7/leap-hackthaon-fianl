@@ -73,43 +73,60 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const isNotReporting = data.reporting === false;
         const isOn = data.status === 'ON';
 
-        icon.textContent = isOn ? '🟢' : '🔴';
+        icon.textContent = isNotReporting ? '⚪' : (isOn ? '🟢' : '🔴');
 
         if (isPole) {
-            status.textContent = isOn ? 'POLE POWER ON' : 'POLE POWER OFF';
-            status.style.color = isOn ? 'var(--success)' : 'var(--danger)';
+            status.textContent = isNotReporting ? 'POLE NOT REPORTING' : (isOn ? 'POLE POWER ON' : 'POLE POWER OFF');
+            status.style.color = isNotReporting ? 'var(--text-muted)' : (isOn ? 'var(--success)' : 'var(--danger)');
             elements.poleIdLabel.textContent = data.device_id;
         } else {
-            status.textContent = isOn ? 'POWER ON' : 'POWER OFF';
-            status.style.color = isOn ? 'var(--success)' : 'var(--danger)';
+            status.textContent = isNotReporting ? 'NOT REPORTING' : (isOn ? 'POWER ON' : 'POWER OFF');
+            status.style.color = isNotReporting ? 'var(--text-muted)' : (isOn ? 'var(--success)' : 'var(--danger)');
             elements.homeUpdate.textContent = formatTimeSince(data.timestamp);
         }
-        
+
         voltage.textContent = data.voltage != null ? `${data.voltage.toFixed(2)} V` : '0.00 V';
         current.textContent = data.current_amps != null ? `${data.current_amps.toFixed(3)} A` : '0.000 A';
+    }
+
+    function statusBadge(entry) {
+        if (entry.reporting === false) return { text: '⚪ NOT REPORTING', color: 'var(--text-muted)' };
+        if (entry.status === 'ON') return { text: '🟢 ON', color: 'var(--success)' };
+        return { text: '🔴 OFF', color: 'var(--danger)' };
     }
 
     function updateAlert(home, pole) {
         if (!home || !pole) return;
 
-        const isLocalOutage = pole.status === 'ON' && home.status === 'OFF';
-        const isUpstreamOutage = pole.status === 'OFF' && home.status === 'OFF';
-        
+        const homeDown = home.status === 'OFF' || home.reporting === false;
+        const poleDown = pole.status === 'OFF' || pole.reporting === false;
+
+        const isLocalOutage = pole.status === 'ON' && pole.reporting !== false && homeDown;
+        const isUpstreamOutage = poleDown && homeDown;
+        const isNotReporting = home.reporting === false || pole.reporting === false;
+
         if (isLocalOutage || isUpstreamOutage) {
             elements.alertSection.style.display = 'block';
             elements.alertPole.textContent = pole.device_id;
             elements.alertHome.textContent = home.device_id;
-            
-            elements.alertTitle.textContent = isLocalOutage ? 'LOCAL POWER ISSUE' : 'UPSTREAM POWER ISSUE';
-            
-            elements.alertPoleIcon.textContent = pole.status === 'ON' ? '🟢 ON' : '🔴 OFF';
-            elements.alertPoleIcon.style.color = pole.status === 'ON' ? 'var(--success)' : 'var(--danger)';
-            
-            elements.alertHomeIcon.textContent = home.status === 'ON' ? '🟢 ON' : '🔴 OFF';
-            elements.alertHomeIcon.style.color = home.status === 'ON' ? 'var(--success)' : 'var(--danger)';
-            
+
+            if (isNotReporting) {
+                elements.alertTitle.textContent = 'DEVICE NOT REPORTING';
+            } else {
+                elements.alertTitle.textContent = isLocalOutage ? 'LOCAL POWER ISSUE' : 'UPSTREAM POWER ISSUE';
+            }
+
+            const poleBadge = statusBadge(pole);
+            elements.alertPoleIcon.textContent = poleBadge.text;
+            elements.alertPoleIcon.style.color = poleBadge.color;
+
+            const homeBadge = statusBadge(home);
+            elements.alertHomeIcon.textContent = homeBadge.text;
+            elements.alertHomeIcon.style.color = homeBadge.color;
+
             const startTime = new Date(home.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             elements.outageStartTime.textContent = startTime;
         } else {
