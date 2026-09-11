@@ -1,4 +1,5 @@
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <time.h>
 
@@ -8,8 +9,8 @@ const char* DEVICE_TOKEN = "token456";
 
 const char* WIFI_SSID     = "X7";
 const char* WIFI_PASSWORD = "12345678";
-const char* SERVER_HOST   = "10.204.222.2";
-const int   SERVER_PORT   = 5000;
+const char* SERVER_HOST   = "5000-kode-ws-387f0e0c7.hebbale.academy";
+const bool  SERVER_USE_TLS = true;
 
 const int PIN_ACS712          = 34;
 const int PIN_VOLTAGE_SENSOR  = 35;
@@ -104,8 +105,15 @@ void sendTelemetry(const char* status, float lineVoltage, float currentAmps) {
   }
 
   HTTPClient http;
-  String url = String("http://") + SERVER_HOST + ":" + SERVER_PORT + "/api/telemetry";
-  http.begin(url);
+  String url = String(SERVER_USE_TLS ? "https://" : "http://") + SERVER_HOST + "/api/telemetry";
+
+  WiFiClientSecure secureClient;
+  if (SERVER_USE_TLS) {
+    secureClient.setInsecure(); // no root CA pinned - accepts any cert
+    http.begin(secureClient, url);
+  } else {
+    http.begin(url);
+  }
   http.addHeader("Content-Type", "application/json");
   http.addHeader("X-Device-ID", DEVICE_ID);
   http.addHeader("X-Device-Token", DEVICE_TOKEN);
