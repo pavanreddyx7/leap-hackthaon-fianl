@@ -80,27 +80,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const isNotReporting = data.reporting === false;
-        const isOn = data.status === 'ON';
+        const isOn = !isNotReporting && data.status === 'ON';
 
-        icon.textContent = isNotReporting ? '⚪' : (isOn ? '🟢' : '🔴');
+        icon.textContent = isOn ? '🟢' : '🔴';
 
         if (isPole) {
-            status.textContent = isNotReporting ? 'POLE NOT REPORTING' : (isOn ? 'POLE POWER ON' : 'POLE POWER OFF');
-            status.style.color = isNotReporting ? 'var(--text-muted)' : (isOn ? 'var(--success)' : 'var(--danger)');
+            status.textContent = isOn ? 'POLE POWER ON' : 'POLE POWER OFF';
+            status.style.color = isOn ? 'var(--success)' : 'var(--danger)';
             elements.poleIdLabel.textContent = data.device_id;
         } else {
-            status.textContent = isNotReporting ? 'NOT REPORTING' : (isOn ? 'POWER ON' : 'POWER OFF');
-            status.style.color = isNotReporting ? 'var(--text-muted)' : (isOn ? 'var(--success)' : 'var(--danger)');
+            status.textContent = isOn ? 'POWER ON' : 'POWER OFF';
+            status.style.color = isOn ? 'var(--success)' : 'var(--danger)';
             elements.homeUpdate.textContent = formatTimeSince(data.timestamp);
         }
 
-        voltage.textContent = data.voltage != null ? `${data.voltage.toFixed(2)} V` : '0.00 V';
-        current.textContent = data.current_amps != null ? `${data.current_amps.toFixed(3)} A` : '0.000 A';
+        voltage.textContent = isNotReporting ? '0.00 V' : (data.voltage != null ? `${data.voltage.toFixed(2)} V` : '0.00 V');
+        current.textContent = isNotReporting ? '0.000 A' : (data.current_amps != null ? `${data.current_amps.toFixed(3)} A` : '0.000 A');
     }
 
     function statusBadge(entry) {
-        if (entry.reporting === false) return { text: '⚪ NOT REPORTING', color: 'var(--text-muted)' };
-        if (entry.status === 'ON') return { text: '🟢 ON', color: 'var(--success)' };
+        if (entry.reporting !== false && entry.status === 'ON') return { text: '🟢 ON', color: 'var(--success)' };
         return { text: '🔴 OFF', color: 'var(--danger)' };
     }
 

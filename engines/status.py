@@ -1,3 +1,16 @@
+NO_VOLTAGE_THRESHOLD_V = 2.0
+
+
+def apply_voltage_floor(status, voltage):
+    """A reading that claims ON but whose voltage is at or below the no-power
+    floor is actually OFF - the device's own ON/OFF flag is trusted otherwise,
+    this only ever pulls a false ON down to OFF, never the reverse.
+    """
+    if status == "ON" and voltage is not None and voltage <= NO_VOLTAGE_THRESHOLD_V:
+        return "OFF"
+    return status
+
+
 def compute_effective_home_status(home_own_status, pole_status):
     """A home's displayed status must reflect that it has no power if its
     own sensor reads zero volts, OR if the pole feeding it has zero volts —

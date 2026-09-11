@@ -8,7 +8,7 @@ from gateway.validator import validate_telemetry
 from engines.processor import process_telemetry
 from engines.ticket import create_ticket
 from engines.analytics import get_uptime_stats, get_outage_history, get_community_stats
-from engines.status import compute_effective_home_status
+from engines.status import compute_effective_home_status, apply_voltage_floor
 import json
 import datetime
 import uvicorn
@@ -103,6 +103,7 @@ def get_dashboard_data(db: Session = Depends(get_db)):
         is_reporting = reading is not None and seconds_since_update <= STALE_THRESHOLD_SECONDS
 
         status = reading.status if (reading and is_reporting) else "NO DATA"
+        status = apply_voltage_floor(status, voltage)
 
         if status == "ON":
             current_poles += 1
@@ -142,6 +143,7 @@ def get_dashboard_data(db: Session = Depends(get_db)):
         is_reporting = reading is not None and seconds_since_update <= STALE_THRESHOLD_SECONDS
 
         own_status = reading.status if (reading and is_reporting) else "NO DATA"
+        own_status = apply_voltage_floor(own_status, reading.voltage if reading else None)
         pole_status = pole_status_map.get(h.parent_pole_id, "UNKNOWN")
         # A home is only ever OFF because of its own zero-voltage reading
         # (local fault) or its pole's zero-voltage reading (upstream
@@ -295,9 +297,11 @@ def get_customer_data(home_id: str, db: Session = Depends(get_db)):
             return None
         seconds_since_update = (now - reading.timestamp).total_seconds()
         is_reporting = seconds_since_update <= STALE_THRESHOLD_SECONDS
+        status = reading.status if is_reporting else "NO DATA"
+        status = apply_voltage_floor(status, reading.voltage)
         return {
             "device_id": device_id,
-            "status": reading.status if is_reporting else "NO DATA",
+            "status": status,
             "reporting": is_reporting,
             "seconds_since_update": seconds_since_update,
             "voltage": reading.voltage,

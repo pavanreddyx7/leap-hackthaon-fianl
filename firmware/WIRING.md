@@ -1,6 +1,6 @@
 # ESP32 Power Node — Wiring & Pin Reference
 
-Two ESP32 boards, identical pin map, different device identity. Hardware: **ACS712 current sensor + discrete 10kΩ/1kΩ resistor-divider voltage sensor + ESP32 + status LEDs** — no RTC module.
+Two ESP32 boards, identical pin map, different device identity. Hardware: **ACS712 current sensor + bought 0–25V voltage sensor module (fixed 30kΩ/7.5kΩ divider, ratio 5) + ESP32 + status LEDs** — no RTC module.
 
 |                | POLE unit                             | HOME unit                                          |
 | -------------- | -------------------------------------- | --------------------------------------------------- |
@@ -17,43 +17,40 @@ Both tokens must match the rows in `gateway/auth.py` on the server. If you build
 | ESP32 pin              | Connects to                                 | Role                                                    |
 | ----------------------- | -------------------------------------------- | -------------------------------------------------------- |
 | `GPIO34` (ADC1_CH6)     | ACS712 `OUT`                                 | Current draw, reported alongside — **diagnostic only, does not decide ON/OFF** |
-| `GPIO35` (ADC1_CH7)     | Divider midpoint (10kΩ/1kΩ junction)         | **PRIMARY** — line voltage decides ON/OFF (`> 1V` = ON) |
+| `GPIO35` (ADC1_CH7)     | Voltage sensor module `S` output             | **PRIMARY** — line voltage decides ON/OFF (`> 1V` = ON) |
 | `GPIO25`                | Green LED (via 220Ω)                        | Lit when reporting ON                                   |
 | `GPIO26`                | Red LED (via 220Ω)                          | Lit when reporting OFF                                  |
 | `GPIO27`                | Blue LED (via 220Ω)                         | Solid = WiFi connected, blinking = disconnected          |
 | `5V` / `VIN`            | ACS712 `VCC`, USB power source               | Sensor + board power                                     |
-| `GND`                   | ACS712 `GND`, divider bottom resistor, LED cathodes, common ground | Shared ground                       |
+| `GND`                   | ACS712 `GND`, voltage sensor module `-`, LED cathodes, common ground | Shared ground                       |
 
 **Voltage decides ON/OFF, current is diagnostic-only**: `NO_VOLTAGE_THRESHOLD_V = 1.0` — real voltage above 1V means ON, at or below means OFF. That threshold sits comfortably above a floating/unconnected sensor's noise (an unwired `GPIO35` reads well under 1V of stray coupling) and comfortably below a real 12V line, so it can't be fooled by a sensor that isn't actually wired in. Current is still measured and sent with every reading, but no longer gates the status.
 
-## The voltage sensor: discrete resistor divider
+## The voltage sensor: bought 0–25V module
 
-Both boards use a hand-built two-resistor divider instead of a packaged "0-25V module" — **10kΩ (top, from 12V+) / 1kΩ (bottom, to common ground)**, tapped at the midpoint into `GPIO35`:
+Both boards use the common off-the-shelf "0-25V voltage sensor module" (3-pin `S`/`+`/`-`, blue PCB) — an internal fixed **30kΩ/7.5kΩ** divider, tapped at the midpoint and broken out to the `S` pin:
 
 ```
 12V (+) ═══════════╤═══════════════► to ACS712 / load
                     │
-                   10kΩ
+              [ voltage sensor module ]
                     │
-                    ├──────► GPIO35
+                    ├──────► S  ──────► GPIO35
                     │
-                   1kΩ
-                    │
-12V (−) ═══════════╧═══════════════► common ground
+12V (−) ═══════════╧═══════════════► "-" (common ground)
 ```
 
-Divider ratio = `(R_top + R_bottom) / R_bottom = (10k + 1k) / 1k = 11`. At a real 12V line that puts ~1.09V on `GPIO35` — comfortably inside the ESP32 ADC's 0–3.3V range with margin to spare.
+Divider ratio = `(R_top + R_bottom) / R_bottom = (30k + 7.5k) / 7.5k = 5`. At a real 12V line that puts ~2.4V on `GPIO35` — comfortably inside the ESP32 ADC's 0–3.3V range with margin to spare.
 
-- Top resistor (10kΩ) connects the sensed 12V(+) line to the `GPIO35` node.
-- Bottom resistor (1kΩ) connects that same `GPIO35` node to common ground (12V−).
-- `GPIO35` itself taps the junction between the two resistors — same pin, same role as the old module's `S` output, just built from discrete parts.
-- The ACS712 still taps 12V(+) directly (in-line with the load) exactly as before — this divider is a parallel branch off the same 12V(+) rail, not in series with the ACS712.
+- Module `+` connects to the sensed 12V(+) line, `-` to common ground — this is a parallel branch off the same 12V(+) rail, not in series with the ACS712.
+- Module `S` (the internal divider midpoint) goes to `GPIO35`.
+- The ACS712 still taps 12V(+) directly (in-line with the load) exactly as before.
 
 ## Sensor calibration constants
 
 | Constant                  | Meaning                             | How to set it                                                                                                          |
 | -------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
-| `VOLTAGE_SENSOR_RATIO`     | Divider ratio                        | Default `11.0` (10kΩ/1kΩ discrete divider, see above). Real resistor tolerance can be off a percent or two — if your readings run consistently high or low against a multimeter, nudge this. |
+| `VOLTAGE_SENSOR_RATIO`     | Divider ratio                        | Default `5.0` (bought 0–25V module's fixed 30kΩ/7.5kΩ divider, see above). Real resistor tolerance can be off a percent or two — if your readings run consistently high or low against a multimeter, nudge this. |
 | `NO_VOLTAGE_THRESHOLD_V`   | Voltage above which status = ON (**the decision**) | Default `1.0` V — well above floating-pin noise, well below a real 12V line |
 | `ACS712_MV_PER_AMP`        | Sensitivity of your ACS712 variant (diagnostic only) | 5A module = `185`, 20A = `100`, 30A = `66` (check the module's silkscreen)                                |
 | `ACS712_MIDPOINT_MV`       | OUT voltage at zero current (diagnostic only) | Measure per-board — reflash with the load removed, read the raw mV printed to Serial, and set this to that value. Never auto-calibrate at boot: the pole's lamp is always-on, so a "zero current at startup" reading would be wrong. |

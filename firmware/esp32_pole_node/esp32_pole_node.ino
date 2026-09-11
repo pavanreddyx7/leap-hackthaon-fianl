@@ -17,7 +17,7 @@ const int PIN_LED_GREEN       = 25;
 const int PIN_LED_RED         = 26;
 const int PIN_LED_BLUE        = 27;
 
-const float VOLTAGE_SENSOR_RATIO = 11.0;
+const float VOLTAGE_SENSOR_RATIO = 5.0;
 const float NO_VOLTAGE_THRESHOLD_V = 1.0;
 
 const float ACS712_MV_PER_AMP = 100.0;
